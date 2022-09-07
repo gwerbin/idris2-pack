@@ -43,10 +43,20 @@ if [ -d "$PACK_DIR" ]; then
 	exit 1
 fi
 
-# Homebrew gmp on M1 macos
-
-if [ -d "/opt/homebrew/include" ]; then
-	export CPATH="/opt/homebrew/include"
+# Find GMP on MacOS
+manually_search_gmp=1
+if command -v pkg-config &>/dev/null; then
+	export CPPFLAGS="${CPPFLAGS:-} $( pkg-config --cflags gmp )"
+	if (( $? == 0 )); then
+		manually_search_gmp=0
+	fi
+fi
+if (( $manually_search_gmp == 1 )); then
+	if [ -f "/opt/homebrew/include/gmp.h" ]; then
+		export CPATH="/opt/homebrew/include"
+	elif [ -f "/opt/local/include/gmp.h" ]; then
+		export CPATH="/opt/local/include"
+	fi
 fi
 
 check_installed git

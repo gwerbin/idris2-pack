@@ -47,15 +47,20 @@ fi
 manually_search_gmp=1
 if command -v pkg-config &>/dev/null; then
 	export CPPFLAGS="${CPPFLAGS:-} $( pkg-config --cflags gmp )"
+	export LDFLAGS="${LDFLAGS:-} $( pkg-config --libs-only-L gmp )"
 	if (( $? == 0 )); then
 		manually_search_gmp=0
 	fi
 fi
 if (( $manually_search_gmp == 1 )); then
 	if [ -f "/opt/homebrew/include/gmp.h" ]; then
-		export CPATH="/opt/homebrew/include"
+		# export CPATH="/opt/homebrew/include"
+		export CPPFLAGS="${CPPFLAGS:-} -I/opt/homebrew/include"
+		export LDFLAGS="${LDFLAGS:-} -L/opt/homebrew/lib"
 	elif [ -f "/opt/local/include/gmp.h" ]; then
-		export CPATH="/opt/local/include"
+		# export CPATH="/opt/local/include"
+		export CPPFLAGS="${CPPFLAGS:-} -I/opt/local/include"
+		export LDFLAGS="${LDFLAGS:-} -I/opt/local/include"
 	fi
 fi
 
@@ -82,16 +87,21 @@ git clone https://github.com/idris-lang/Idris2.git "$PACK_DIR/clones/Idris2"
 pushd "$PACK_DIR/clones/Idris2"
 git checkout "$IDRIS2_COMMIT"
 
+BOOT_PATH="$PACK_DIR/install/$IDRIS2_COMMIT/_boot"
+IDRIS2_BOOT="$BOOT_PATH/bin/idris2"
 PREFIX_PATH="$PACK_DIR/install/$IDRIS2_COMMIT/idris2"
-BOOT_PATH="$PACK_DIR/install/$IDRIS2_COMMIT/idris2/bin/idris2"
+IDRIS2="$PREFIX_PATH/bin/idris2"
 
-make bootstrap PREFIX="$PREFIX_PATH" SCHEME="$SCHEME"
-make install PREFIX="$PREFIX_PATH"
+make bootstrap PREFIX="$BOOT_PATH" SCHEME="$SCHEME" CPPFLAGS="${CPPFLAGS:-}" LDFLAGS="${LDFLAGS:-}"
+make install PREFIX="$BOOT_PATH"
 make clean
-make all IDRIS2_BOOT="$BOOT_PATH" PREFIX="$PREFIX_PATH"
-make install IDRIS2_BOOT="$BOOT_PATH" PREFIX="$PREFIX_PATH"
-make install-with-src-libs IDRIS2_BOOT="$BOOT_PATH" PREFIX="$PREFIX_PATH"
-make install-with-src-api IDRIS2_BOOT="$BOOT_PATH" PREFIX="$PREFIX_PATH"
+make all IDRIS2_BOOT="$IDRIS2_BOOT" PREFIX="$PREFIX_PATH" CPPFLAGS="${CPPFLAGS:-}" LDFLAGS="${LDFLAGS:-}"
+make install IDRIS2_BOOT="$IDRIS2_BOOT" PREFIX="$PREFIX_PATH"
+make install-with-src-libs IDRIS2_BOOT="$IDRIS2_BOOT" PREFIX="$PREFIX_PATH"
+make install-with-src-api IDRIS2_BOOT="$IDRIS2_BOOT" PREFIX="$PREFIX_PATH"
+make libdocs IDRIS2_BOOT="$IDRIS2_BOOT" PREFIX="$PREFIX_PATH"
+
+rm -rf "$BOOT_PATH"
 popd
 
 # Install filepath
@@ -100,7 +110,7 @@ FILEPATH_COMMIT=$(sed -ne '/^\[db.filepath\]/,/^commit/{/^commit/s/commit *= *"\
 git clone https://github.com/stefan-hoeck/idris2-filepath.git "$PACK_DIR/clones/idris2-filepath"
 pushd "$PACK_DIR/clones/idris2-filepath"
 git checkout "$FILEPATH_COMMIT"
-"$BOOT_PATH" --install filepath.ipkg
+"$IDRIS2_BOOT" --install filepath.ipkg
 popd
 
 # Install toml-idr
@@ -109,14 +119,14 @@ TOML_COMMIT=$(sed -ne '/^\[db.toml\]/,/^commit/{/^commit/s/commit *= *"\([a-f0-9
 git clone https://github.com/cuddlefishie/toml-idr "$PACK_DIR/clones/toml-idr"
 pushd "$PACK_DIR/clones/toml-idr"
 git checkout "$TOML_COMMIT"
-"$BOOT_PATH" --install toml.ipkg
+"$IDRIS2_BOOT" --install toml.ipkg
 popd
 
 # Install pack
 
 git clone https://github.com/stefan-hoeck/idris2-pack.git "$PACK_DIR/clones/idris2-pack"
 pushd "$PACK_DIR/clones/idris2-pack"
-"$BOOT_PATH" --build pack.ipkg
+"$IDRIS2_BOOT" --build pack.ipkg
 mkdir -p "$PACK_DIR/bin"
 cp -r build/exec/* "$PACK_DIR/bin"
 popd

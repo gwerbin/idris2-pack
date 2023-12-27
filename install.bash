@@ -34,7 +34,7 @@ fi
 read -r -p "Enter the name of your Chez Scheme or Racket binary [$DETECTED_SCHEME]: " SCHEME
 SCHEME=${SCHEME:-$DETECTED_SCHEME}
 
-if [ -z "$SCHEME" ]; then
+if [[ -z "$SCHEME" ]]; then
 	>&2 echo "Chez Scheme binary was not set."
 	exit 1
 else
@@ -79,7 +79,7 @@ git checkout "$IDRIS2_COMMIT"
 PREFIX_PATH="$PACK_DIR/install/$IDRIS2_COMMIT/idris2"
 BOOT_PATH="$PACK_DIR/install/$IDRIS2_COMMIT/idris2/bin/idris2"
 
-if [ "$SCHEME" = "racket" ]; then
+if [[ "$SCHEME" = "racket" ]]; then
 	CG="racket"
 	make bootstrap-racket PREFIX="$PREFIX_PATH"
 else

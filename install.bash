@@ -4,8 +4,12 @@ set -eu
 
 # common functions
 
+function command_exists {
+	command -v "$1" &>/dev/null
+}
+
 function check_installed {
-	if ! command -v "$1" &>/dev/null; then
+	if ! command_exists "$1"; then
 		echo "Please install $1"
 		exit 1
 	fi
@@ -17,15 +21,13 @@ function check_installed {
 
 # Detect Chez executable
 
-PACK_DIR="${PACK_DIR:-$HOME/.pack}"
-
-if command -v chezscheme &>/dev/null; then
+if command_exists chezscheme; then
 	DETECTED_SCHEME=chezscheme
-elif command -v scheme &>/dev/null; then
+elif command_exists scheme; then
 	DETECTED_SCHEME=scheme
-elif command -v chez &>/dev/null; then
+elif command_exists chez; then
 	DETECTED_SCHEME=chez
-elif command -v racket &>/dev/null; then
+elif command_exists racket; then
 	DETECTED_SCHEME=racket
 else
 	DETECTED_SCHEME=''

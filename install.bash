@@ -43,23 +43,53 @@ else
 	echo "Using SCHEME=$SCHEME"
 fi
 
-if [ -d "$PACK_DIR" ]; then
-	echo "There is already a $PACK_DIR directory."
-	echo "Please remove it with 'rm -fr $PACK_DIR' and rerun this script."
-	exit 1
-fi
-
-# Homebrew gmp on M1 macos
-
-if [ -d "/opt/homebrew/include" ]; then
-	export CPATH="/opt/homebrew/include"
-fi
+# Detect build tools
 
 check_installed git
 check_installed "$SCHEME"
 check_installed make
 
+# Detect GMP library
+
+if command_exists pkg-config; then
+	CPPFLAGS="${CFLAGS:-} $(pkg-config --cflags gmp)"
+	echo "Using CPPFLAGS=$CPPFLAGS"
+	export CPPFLAGS
+	# _gmp_cflag="$( pkg-config --cflags gmp )"
+	# CPATH="${CPATH:+${CPATH}:}${_gmp_cflag#-I}"
+else
+	>&2 echo "pkg-config is not installed. This script will attempt to auto-detect the GMP library header file."
+	if [[ -d /opt/local/include/gmp.h ]]; then  # MacPorts
+		CPATH="${CPATH:+${CPATH}:}/opt/local/include"
+	elif [[ -d /opt/homebrew/include/gmp.h ]]; then  # Homebrew (on Apple Silicon)
+		CPATH="${CPATH:+${CPATH}:}/opt/homebrew/include"
+	fi
+	echo "Using CPATH=$CPATH"
+	export CPATH
+fi
+
+# Detect install location
+
+PACK_DIR="${PACK_DIR:-$HOME/.pack}"
+
+if [[ -d "$PACK_DIR" ]]; then
+	>&2 echo "There is already a $PACK_DIR directory."
+	>&2 echo "Please remove it with 'rm -fr $PACK_DIR' and rerun this script."
+	exit 1
+else
+	echo "Using PACK_DIR=$PACK_DIR"
+fi
+
 # Install package collection
+
+read -r -p "Continue? [yn] " yn
+case $yn in
+	[yY]*) ;;
+	*)
+		>&2 echo "Quitting, no action taken."
+		exit
+	;;
+esac
 
 mkdir "$PACK_DIR"
 mkdir "$PACK_DIR/clones"

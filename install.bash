@@ -31,16 +31,14 @@ else
 	DETECTED_SCHEME=''
 fi
 
-read -r -p "Enter the name of your chez-scheme or racket binary [$DETECTED_SCHEME]: " SCHEME
+read -r -p "Enter the name of your Chez Scheme or Racket binary [$DETECTED_SCHEME]: " SCHEME
 SCHEME=${SCHEME:-$DETECTED_SCHEME}
 
-# Verify that the necessary programs are installed
-
 if [ -z "$SCHEME" ]; then
-	echo 'scheme binary was not set'
+	>&2 echo "Chez Scheme binary was not set."
 	exit 1
 else
-	echo "Using $SCHEME for code generation"
+	echo "Using SCHEME=$SCHEME"
 fi
 
 if [ -d "$PACK_DIR" ]; then

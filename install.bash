@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -eux
+set -eu
 
 # common functions
 
@@ -12,6 +12,8 @@ function check_installed {
 }
 
 # end common functions
+
+[[ -n "${TRACE:-}" ]] && set -x
 
 # Detect Chez executable
 
